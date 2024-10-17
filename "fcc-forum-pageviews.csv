@@ -1,0 +1,71 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load data and set index
+df = pd.read_csv("fcc-forum-pageviews.csv", index_col="date", parse_dates=True)
+
+# Clean outliers (top and bottom 2.5%)
+q1 = df["page_views"].quantile(0.025)
+q3 = df["page_views"].quantile(0.975)
+df_filtered = df.query("page_views >= @q1 and page_views <= @q3")
+
+
+def draw_line_plot(data):
+  """
+  Plots a line chart of daily page views.
+  """
+  plt.figure(figsize=(12, 6))
+  plt.plot(data.index, data["page_views"])
+  plt.title("Daily freeCodeCamp Forum Page Views 5/2016-12/2019")
+  plt.xlabel("Date")
+  plt.ylabel("Page Views")
+  plt.grid(True)
+  plt.show()   
+
+
+
+def draw_bar_plot(data):
+  """
+  Plots a bar chart of average daily page views by month and year.
+  """
+  data_by_month = data.resample("M").mean()
+  data_by_month.unstack().plot(kind="bar")
+  plt.title("Months")
+  plt.xlabel("Years")
+  plt.ylabel("Average Page Views")
+  plt.legend(title="Month")
+  plt.grid(axis="y")
+  plt.show()
+
+
+def draw_box_plot(data):
+  """
+  Plots box plots to show page view distribution by year and month.
+  """
+  fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+
+  sns.boxplot(
+      x="year", y="page_views", showmeans=True, data=data.reset_index(), ax=ax1
+  )
+  ax1.set_title("Year-wise Box Plot (Trend)")
+  ax1.set_xlabel("Year")
+  ax1.set_ylabel("Page Views")
+  ax1.tick_params(bottom=False)
+
+  sns.boxplot(
+      x="month", y="page_views", showmeans=True, data=data.reset_index(), ax=ax2
+  )
+  plt.xticks(rotation=45)
+  ax2.set_title("Month-wise Box Plot (Seasonality)")
+  ax2.set_xlabel("Month")
+  ax2.set_ylabel("Page Views")
+
+  plt.tight_layout()
+  plt.show()
+
+
+# Draw the charts using a copy of the data
+draw_line_plot(df_filtered.copy())
+draw_bar_plot(df_filtered.copy())
+draw_box_plot(df_filtered.copy())
